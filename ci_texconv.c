@@ -23,7 +23,7 @@ void export_ci(Texture *tex, char *filename) {
 
     error = lodepng_load_file(&png, &pngsize, filename);
     if(!error) error = lodepng_decode(&image, &tex->width, &tex->height, &state, png, pngsize);
-    if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
+    if(error) fprintf(stderr, "error %u: %s\n", error, lodepng_error_text(error));
 
     if (tex->flags & MAKE_BG_FLAG) {
         export_bgheader(tex);
