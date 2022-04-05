@@ -12,6 +12,8 @@ void usage(void) {
                     "\n"
                     "options:  -m name    Name the texture (defaults to \"texture\").\n"
                     "          -Q         Quadricate lookup table for color index texture\n"
+                    "          -C fname   CI Palette output location (if not defined pallete embeds in file)\n"
+                    "          -B         Create Kirby64 Image Header\n"
                     "          -P         Toggle Padding of texel rows for use in Load Block "
                     "(default=on)\n"
                     "          -F         Flip Image Vertically\n"
@@ -51,6 +53,8 @@ int main(int argc, char *argv[]) {
     int flags;
     struct texture tex;
     int shuf_mask;
+    char *palettename = NULL;
+    int makeBG = 0;
 
     strcpy(tex.name, "texture");
     lr = lg = lb = 0;
@@ -62,8 +66,15 @@ int main(int argc, char *argv[]) {
     output = C;
     ColorIndexType = COLOR;
 
-    while ((c = getopt(argc, argv, "l:h:m:f:s:o:t:FPrXQS:")) != EOF) {
+    while ((c = getopt(argc, argv, "l:h:m:f:C:s:o:t:FPrBXQS:")) != EOF) {
         switch (c) {
+            case 'C':
+                palettename = (char *)malloc(1025);
+                strcpy(palettename, optarg);
+                break;
+            case 'B':
+                flags ^= MAKE_BG_FLAG;
+                break;
             case 'Q':
                 flags ^= QUAD_FLAG;
                 break;
@@ -175,5 +186,5 @@ int main(int argc, char *argv[]) {
         printf(" *\n");
     }
 
-    tex_convert(argv[optind], &tex, fmt, siz, 0, lr, lg, lb, hr, hg, hb, output, flags, shuf_mask);
+    tex_convert(argv[optind], &tex, fmt, siz, 0, lr, lg, lb, hr, hg, hb, output, flags, shuf_mask, palettename);
 }

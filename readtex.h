@@ -79,6 +79,7 @@ enum OutputFormats {
 	C = 0,
 	RAW = 1,
 	MIPMAP = 2,
+	ASCII = 3, // This is the old RAW format
 };
 
 #define COLOR           0
@@ -92,6 +93,11 @@ typedef struct texture {
 	int	fmt;			/* RGBA, IA, I, etc.		*/
 	int	siz;			/* Number of bits		*/
 	int output;         /* C, RAW, MIPMAP       */
+	u32 flags;
+	u32 shuffle_mask;
+
+	int realwidth;  // for kirby64 BG
+	int realheight;  // for kirby64 BG
 } Texture;
 
 #define FLIP_FLAG 		(0x001)
@@ -103,6 +109,11 @@ typedef struct texture {
 #define SKIP_RAW_FLAG 		(0x040)
 #define MM_HI_LEVEL 		(0x080)
 #define HALF_SHIFT 		(0x100)
+#define MAKE_BG_FLAG 		(0x200)
+
+struct HashEntry {
+    unsigned char red, green, blue, alpha, ColorNumber;
+};
 
 #ifdef __cplusplus
 extern "C" {
@@ -110,11 +121,24 @@ extern "C" {
 
 int tex_convert (char *fn, struct texture *tex, int fmt, int siz, int makestatic,
 	int lr, int lg, int lb, int hr, int hg, int hb, int output, int flags,
-	int shuffle_mask);
+	int shuffle_mask,
+	char *palname
+	);
+
+u8 avg_rgb(rgba *texel);
 
 char *fmtstr (int fmt);
 char *cmbstr (int fmt);
 char *sizstr (int siz);
+
+void export_rgba(rgba *img, Texture *tex);
+void export_ia(rgba *img, Texture *tex);
+void export_i(rgba *img, Texture *tex);
+void export_ci(Texture *tex, char *path);
+
+void write_word(Texture *t, u32 w);
+void write_hword(Texture *t, u8 *h);
+void write_byte(Texture *t, u8 b);
 
 #ifdef __cplusplus
 }

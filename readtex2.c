@@ -4,12 +4,9 @@
 #include <unistd.h>
 
 #include "readtex.h"
-#define STBI_NO_LINEAR
-#define STBI_NO_HDR
-#define STBI_NO_TGA
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/stb_image.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
+
+#include "lodepng.h"
+
 
 void write_byte(Texture *t, u8 b) {
 	u8 ba[] = {0, 0};
@@ -17,6 +14,9 @@ void write_byte(Texture *t, u8 b) {
 	switch (t->output) {
 		case C:
 			printf("0x%02X, ", b);
+			break;
+		case ASCII:
+			printf("%.2x ", b);
 			break;
 		case RAW:
 			fwrite(ba, 1, 1, stdout);
@@ -28,6 +28,9 @@ void write_hword(Texture *t, u8 *h) {
 	switch (t->output) {
 		case C:
 			printf("0x%02X, 0x%02X, ", h[0], h[1]);
+			break;
+		case ASCII:
+			printf("%.2x %.2x ", h[0], h[1]);
 			break;
 		case RAW:
 			fwrite(h, 1, 2, stdout);
@@ -47,6 +50,14 @@ void write_word(Texture *t, u32 w) {
 				(w      ) & 0xFF
 			);
 			break;
+		case ASCII:
+			printf("%.2x %.2x %.2x %.2x ",
+				(w >> 24) & 0xFF,
+				(w >> 16) & 0xFF,
+				(w >> 8 ) & 0xFF,
+				(w      ) & 0xFF
+			);
+			break;
 		case RAW:
 			fwrite(wa, 4, 1, stdout);
 			break;
@@ -60,58 +71,65 @@ void newline(int output) {
 	}
 }
 
+u8 avg_rgb(rgba *texel) {
+	return (texel->red + texel->green + texel->blue) / 3;
+}
 
 
-rgba *read_image(char *filename, int *w, int *h) {
-	rgba *img;
-	int channels = 0;
+u8 *read_image(const char* filename, int *w, int *h) {
+	unsigned error;
+	unsigned char* image = 0;
+	unsigned char* png = 0;
+	size_t pngsize;
+	LodePNGState state;
 
-	stbi_uc *data = stbi_load(filename, w, h, &channels, STBI_default);
-	u32 img_size = *w * *h * sizeof(*img);
-	img = malloc(img_size);
-	if (!img) {
-		printf("error %s %d\n", __FILE__, __LINE__);
-		exit(1);
+	lodepng_state_init(&state);
+	/*optionally customize the state*/
+
+	error = lodepng_load_file(&png, &pngsize, filename);
+	if(!error) error = lodepng_decode(&image, w, h, &state, png, pngsize);
+	if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
+
+	free(png);
+
+
+
+	lodepng_state_cleanup(&state);
+	return image;
+}
+
+void export_i(rgba *img, struct texture *t) {
+	if (t->output == C) {
+		printf("#include <ultra64.h>\n");
+		printf("u32 %s[] = {\n", t->name);
 	}
 
-	switch (channels) {
-		case 3: // red, green, blue
-		case 4: // red, green, blue, alpha
-			for (int j = 0; j < *h; j++) {
-				for (int i = 0; i < *w; i++) {
-					int idx = j * *w + i;
-					img[idx].red   = data[channels*idx];
-					img[idx].green = data[channels*idx + 1];
-					img[idx].blue  = data[channels*idx + 2];
-					if (channels == 4) {
-						img[idx].alpha = data[channels*idx + 3];
-					} else {
-						img[idx].alpha = 0xFF;
-					}
-				}
-			}
-			break;
-		case 2: // grey, alpha
-			for (int j = 0; j < *h; j++) {
-				for (int i = 0; i < *w; i++) {
-					int idx = j * *w + i;
-					img[idx].red   = data[2*idx];
-					img[idx].green = data[2*idx];
-					img[idx].blue  = data[2*idx];
-					img[idx].alpha = data[2*idx + 1];
-				}
-			}
-			break;
-		default:
-			fprintf(stderr, "Don't know how to read channels: %d\n", channels);
-			free(img);
-			img = NULL;
+	u32 texelcount = t->width * t->height;
+
+	for (u32 i = 0; i < texelcount; i += 2) {
+		// Process 2 pixels at a time for 4 bit to be feasible
+		// i hope every image has an even number of pixels...
+		u8 intensity_0 = avg_rgb(&img[i]);
+		u8 intensity_1 = avg_rgb(&img[i + 1]);
+
+		if (t->siz == 4) {
+			u8 i4i4 = (SCALE_8_4(intensity_0) << 4)
+			          | (SCALE_8_4(intensity_1));
+			write_byte(t, i4i4);
+		} else if (t->siz == 8) {
+			// funny endian memes so we just make a zero terminated u8 buffer here
+			u8 i8i8[] = {0, 0, 0};
+
+			i8i8[0] = intensity_0;
+			i8i8[1] = intensity_1;
+			write_hword(t, i8i8);
+		}
 	}
 
-	// cleanup
-	stbi_image_free(data);
-
-	return img;
+	if (t->output == C) {
+		printf("};\n");
+		printf("Gfx %s_pad[] = {gsSPEndDisplayList(),};\n", t->name);
+	}
 }
 
 void export_ia(rgba *img, struct texture *t) {
@@ -125,9 +143,9 @@ void export_ia(rgba *img, struct texture *t) {
 	for (u32 i = 0; i < texelcount; i += 2) {
 		// Process 2 pixels at a time for 4 bit to be feasible
 		// i hope every image has an even number of pixels...
-		u8 intensity_0 = img[i].red;
+		u8 intensity_0 = avg_rgb(&img[i]);
 		u8 alpha_0 = img[i].alpha;
-		u8 intensity_1 = img[i + 1].red;
+		u8 intensity_1 = avg_rgb(&img[i + 1]);
 		u8 alpha_1 = img[i + 1].alpha;
 
 		if (t->siz == 4) {
@@ -195,7 +213,9 @@ void export_rgba(rgba *img, struct texture *t) {
 
 int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int makestatic,
 	int lr, int lg, int lb, int hr, int hg, int hb, int output, int flags,
-	int shuffle_mask) {
+	int shuffle_mask,
+	// new fields
+	char *pallete_name) {
 
 	int width = 0;
 	int height = 0;
@@ -203,6 +223,13 @@ int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int make
 	tex->fmt = fmt;
 	tex->siz = siz;
 	tex->output = output;
+	tex->flags = flags;
+	tex->shuffle_mask = shuffle_mask;
+
+	if (tex->fmt == CI) {
+		export_ci(tex, filename);
+		return;
+	}
 
 	rgba *img = read_image(filename, &width, &height);
 
@@ -214,12 +241,14 @@ int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int make
 			export_rgba(img, tex); break;
 		case IA:
 			export_ia(img, tex); break;
+		case I:
+			export_i(img, tex); break;
+		// case A: // same algo as FMT_I
+		// 	export_i(img, tex); break;
 		default:
 			printf("Bad format?\n");
 			exit(1);
-		// case IA:
-		// 	export_ia(tex);
 	}
-
+	free(img);
 }
 

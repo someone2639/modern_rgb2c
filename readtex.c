@@ -44,7 +44,7 @@ struct {
     struct HashEntry RGB[256];
 } ColorHashTable[256];
 
-int NumberOfColorsSeen = 0;
+
 
 struct {
     int mm_supplied;
