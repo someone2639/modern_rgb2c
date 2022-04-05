@@ -238,21 +238,21 @@ void export_bgheader(Texture *tex) {
 	if (tex->realheight != 0) _ht = tex->realheight;
 	else                      _ht = tex->height;
 
-	#define LBU(x) ((x) >> 16), ((x) & 0xFF)
+	// #define LBU(x) ((x) >> 8), ((x) & 0xFF)
 
-	fprintf(stderr, "W %.2X %.2X H %.2X %.2X RW %.2X %.2X RH %.2X %.2X\n",
-		LBU(tex->width),
-		LBU(tex->height),
-		LBU(tex->realwidth),
-		LBU(tex->realheight)
-	);
+	// fprintf(stderr, "W %.2X %.2X H %.2X %.2X RW %.2X %.2X RH %.2X %.2X\n",
+	// 	LBU(tex->width),
+	// 	LBU(tex->height),
+	// 	LBU(tex->realwidth),
+	// 	LBU(tex->realheight)
+	// );
 
 	u8 wd[2] = {0, 0};
-	wd[0] = _wd >> 16;
+	wd[0] = _wd >> 8;
 	wd[1] = _wd & 0xFF;
 
 	u8 ht[2] = {0, 0};
-	ht[0] = _ht >> 16;
+	ht[0] = _ht >> 8;
 	ht[1] = _ht & 0xFF;
 
 	write_hword(tex, wd);
