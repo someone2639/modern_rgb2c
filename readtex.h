@@ -31,6 +31,22 @@ typedef struct _ia
    uint8_t alpha;
 } ia;
 
+enum ImageFormat {
+    RGBA32,
+    RGBA16,
+    YUV16,
+    IA16,
+    CI8,
+    I8,
+    IA8,
+    CI4,
+    I4,
+    IA4,
+    PALETTE,
+    NUM_FORMATS,
+    INVALID_FORMAT
+};
+
 // CI palette
 typedef struct
 {

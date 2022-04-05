@@ -1,11 +1,39 @@
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "readtex.h"
+
+const char* const imgFormatStrings[] = {
+    "rgba32",
+    "rgba16",
+    "yuv16",
+    "ia16",
+    "ci8",
+    "i8",
+    "ia8",
+    "ci4",
+    "i4",
+    "ia4",
+    "pal",
+};
+
+const uint8_t imgFormatDepths[] = {
+    32,
+    16,
+    16,
+    16,
+    8,
+    8,
+    8,
+    4,
+    4,
+    4,
+    0,
+};
+
+
 
 void usage(void) {
     fprintf(stderr, "\nusage: rgb2c [options] image.png\n"
@@ -25,6 +53,7 @@ void usage(void) {
                     "bytes long\n"
                     "          -t citype  Color Index type (C, I)\n"
                     "          -f fmt     Format of texel (RGBA, YUV, CI, IA, I, A)\n"
+                    "          -G fmtsiz  n64graphics compatible format string\n"
                     "			(defaults to best type for image).\n"
                     "          -o output  Format of output text (`C' for .c output, `RAW'\n"
                     "                        for raw ascii format, 'MIP' for MipMapping "
@@ -51,7 +80,7 @@ int main(int argc, char *argv[]) {
     int c, lr, lg, lb, hr, hg, hb;
     extern int optind;
     extern char *optarg;
-    int fmt, siz, output, ColorIndexType;
+    int fmt, siz, fmtsiz, output, ColorIndexType;
     int flags;
     struct texture tex;
     int shuf_mask;
@@ -66,12 +95,21 @@ int main(int argc, char *argv[]) {
     flags = PAD_FLAG | FLIP_FLAG; /* Default is ON to correct for SGI format */
     fmt = -1;
     siz = -1;
+    fmtsiz = -1;
     shuf_mask = 0;
     output = C;
     ColorIndexType = COLOR;
 
-    while ((c = getopt(argc, argv, "W:H:l:h:m:f:C:s:o:t:FPrBXQS:")) != EOF) {
+    while ((c = getopt(argc, argv, "G:W:H:l:h:m:f:C:s:o:t:FPrBXQS:")) != EOF) {
         switch (c) {
+            case 'G':
+                for (int iii = 0; iii < NUM_FORMATS; iii++) {
+                    if (strcmp(optarg, imgFormatStrings[iii]) == 0) {
+                        fmtsiz = iii;
+                        break;
+                    }
+                }
+                break;
             case 'C':
                 palettename = (char *)malloc(1025);
                 strcpy(palettename, optarg);
@@ -180,6 +218,19 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    if (fmtsiz != -1) {
+        switch (fmtsiz) {
+            case RGBA16: case RGBA32: fmt = RGBA; break;
+            case IA16: case IA8: case IA4: fmt = IA; break;
+            case I8: case I4: fmt = I; break;
+            case CI8: case CI4: fmt = I; break;
+            default:
+                fprintf(stderr, "bad fmtsiz passed with -G!");
+                exit(1);
+        }
+        siz = imgFormatDepths[fmtsiz];
+    }
+
     if (optind == argc) {
         usage();
     }
@@ -200,4 +251,6 @@ int main(int argc, char *argv[]) {
     if (realwidth > 0) tex.realwidth = realwidth;
 
     tex_convert(argv[optind], &tex, fmt, siz, 0, lr, lg, lb, hr, hg, hb, output, flags, shuf_mask, palettename);
+
+    free(palettename);
 }
