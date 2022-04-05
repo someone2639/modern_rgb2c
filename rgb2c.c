@@ -14,6 +14,8 @@ void usage(void) {
                     "          -Q         Quadricate lookup table for color index texture\n"
                     "          -C fname   CI Palette output location (if not defined pallete embeds in file)\n"
                     "          -B         Create Kirby64 Image Header\n"
+                    "          -W width   Image Header reported width\n"
+                    "          -H height  Image Header reported height\n"
                     "          -P         Toggle Padding of texel rows for use in Load Block "
                     "(default=on)\n"
                     "          -F         Flip Image Vertically\n"
@@ -55,6 +57,8 @@ int main(int argc, char *argv[]) {
     int shuf_mask;
     char *palettename = NULL;
     int makeBG = 0;
+    int realheight = 0;
+    int realwidth = 0;
 
     strcpy(tex.name, "texture");
     lr = lg = lb = 0;
@@ -66,11 +70,17 @@ int main(int argc, char *argv[]) {
     output = C;
     ColorIndexType = COLOR;
 
-    while ((c = getopt(argc, argv, "l:h:m:f:C:s:o:t:FPrBXQS:")) != EOF) {
+    while ((c = getopt(argc, argv, "W:H:l:h:m:f:C:s:o:t:FPrBXQS:")) != EOF) {
         switch (c) {
             case 'C':
                 palettename = (char *)malloc(1025);
                 strcpy(palettename, optarg);
+                break;
+            case 'W':
+                realwidth = atoi(optarg);
+                break;
+            case 'H':
+                realheight = atoi(optarg);
                 break;
             case 'B':
                 flags ^= MAKE_BG_FLAG;
@@ -185,6 +195,9 @@ int main(int argc, char *argv[]) {
         printf(" * by \"rgb2c\" from the file \"%s\".\n", argv[optind]);
         printf(" *\n");
     }
+
+    if (realheight > 0) tex.realheight = realheight;
+    if (realwidth > 0) tex.realwidth = realwidth;
 
     tex_convert(argv[optind], &tex, fmt, siz, 0, lr, lg, lb, hr, hg, hb, output, flags, shuf_mask, palettename);
 }

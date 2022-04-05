@@ -25,6 +25,10 @@ void export_ci(Texture *tex, char *filename) {
     if(!error) error = lodepng_decode(&image, &tex->width, &tex->height, &state, png, pngsize);
     if(error) printf("error %u: %s\n", error, lodepng_error_text(error));
 
+    if (tex->flags & MAKE_BG_FLAG) {
+        export_bgheader(tex);
+    }
+
     for (int i = 0; i < tex->width * tex->height * tex->siz / 8; i++) {
         write_byte(tex, image[i]);
     }
@@ -53,6 +57,7 @@ void export_ci(Texture *tex, char *filename) {
 
     // done saving data
     free(png);
+    free(image);
     lodepng_state_cleanup(&state);
 }
 

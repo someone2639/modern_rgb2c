@@ -125,6 +125,8 @@ int tex_convert (char *fn, struct texture *tex, int fmt, int siz, int makestatic
 	char *palname
 	);
 
+void api_tex_convert(char *filename, char *palette_name, Texture *tex);
+
 u8 avg_rgb(rgba *texel);
 
 char *fmtstr (int fmt);

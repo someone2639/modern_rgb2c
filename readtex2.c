@@ -65,8 +65,8 @@ void write_word(Texture *t, u32 w) {
 }
 
 
-void newline(int output) {
-	if (output == C) {
+void newline(Texture *tex) {
+	if (tex->output == C) {
 		printf("\n");
 	}
 }
@@ -211,11 +211,80 @@ void export_rgba(rgba *img, struct texture *t) {
 	}
 }
 
+#define G_IM_SIZ_4b	0
+#define G_IM_SIZ_8b	1
+#define G_IM_SIZ_16b	2
+#define G_IM_SIZ_32b	3
+#define G_IM_SIZ_DD	5
+
+void export_bgheader(Texture *tex) {
+	write_byte(tex, tex->fmt);
+	switch(tex->siz) {
+		case 4: write_byte(tex, G_IM_SIZ_4b); break;
+		case 8: write_byte(tex, G_IM_SIZ_8b); break;
+		case 16: write_byte(tex, G_IM_SIZ_16b); break;
+		case 32: write_byte(tex, G_IM_SIZ_32b); break;
+	}
+
+	if (tex->fmt != CI) write_byte(tex, 0x7C);
+	else                write_byte(tex, 0);
+
+	write_byte(tex, 0xFF);
+
+	u8 wd[2] = {0, 0};
+	wd[0] = tex->realwidth >> 16;
+	wd[1] = tex->realwidth & 0xFF;
+
+	u8 ht[2] = {0, 0};
+	ht[0] = tex->realheight >> 16;
+	ht[1] = tex->realheight & 0xFF;
+
+	write_hword(tex, wd);
+	write_hword(tex, ht);
+
+	write_word(tex, 0x10);
+	u32 pal_rom = tex->width * tex->height * tex->siz / 8 + 0x10;
+	fprintf(stderr, "pal_rom is (%d %d %08X)\n", tex->realwidth, tex->realheight, pal_rom);
+	write_byte(tex, pal_rom >> 24);
+	write_byte(tex, pal_rom >> 16);
+	write_byte(tex, pal_rom >> 8);
+	write_byte(tex, pal_rom & 0xFF);
+
+	newline(tex);
+}
+
+void api_tex_convert(char *filename, char *palette_name, Texture *tex) {
+	if (tex->fmt == CI) {
+		export_ci(tex, filename);
+		return;
+	}
+
+	rgba *img = read_image(filename, &tex->width, &tex->height);
+
+	if (tex->flags & MAKE_BG_FLAG) {
+		export_bgheader(tex);
+	}
+
+	switch (tex->fmt) {
+		case RGBA:
+			export_rgba(img, tex); break;
+		case IA:
+			export_ia(img, tex); break;
+		case I:
+			export_i(img, tex); break;
+		default:
+			printf("Bad format?\n");
+			exit(1);
+	}
+	free(img);
+}
+
 int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int makestatic,
 	int lr, int lg, int lb, int hr, int hg, int hb, int output, int flags,
 	int shuffle_mask,
 	// new fields
-	char *pallete_name) {
+	char *pallete_name
+) {
 
 	int width = 0;
 	int height = 0;
@@ -235,6 +304,10 @@ int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int make
 
 	tex->width = width;
 	tex->height = height;
+
+	if (tex->flags & MAKE_BG_FLAG) {
+		export_bgheader(tex);
+	}
 
 	switch (tex->fmt) {
 		case RGBA:
