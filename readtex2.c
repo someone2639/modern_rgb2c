@@ -238,6 +238,8 @@ void export_bgheader(Texture *tex) {
 	if (tex->realheight != 0) _ht = tex->realheight;
 	else                      _ht = tex->height;
 
+	fprintf(stderr, "W %04X H %04X RW %04X RH %04X\n", tex->width, tex->height, tex->realwidth, tex->realheight);
+
 	u8 wd[2] = {0, 0};
 	wd[0] = _wd >> 16;
 	wd[1] = _wd & 0xFF;

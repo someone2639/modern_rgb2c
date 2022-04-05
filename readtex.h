@@ -153,6 +153,7 @@ void export_rgba(rgba *img, Texture *tex);
 void export_ia(rgba *img, Texture *tex);
 void export_i(rgba *img, Texture *tex);
 void export_ci(Texture *tex, char *path);
+void export_bgheader(Texture *tex);
 
 void write_word(Texture *t, u32 w);
 void write_hword(Texture *t, u8 *h);
