@@ -251,7 +251,12 @@ void export_bgheader(Texture *tex) {
 
 	write_word(tex, 0x10);
 	u32 pal_rom = tex->width * tex->height * tex->siz / 8 + 0x10;
-	fprintf(stderr, "pal_rom is (%d %d %08X)\n", tex->realwidth, tex->realheight, pal_rom);
+	// fprintf(stderr, "pal_rom is (%d %d %08X)\n", tex->realwidth, tex->realheight, pal_rom);
+
+	if (tex->fmt != CI) {
+		pal_rom = 0x00000301;
+	}
+
 	write_byte(tex, pal_rom >> 24);
 	write_byte(tex, pal_rom >> 16);
 	write_byte(tex, pal_rom >> 8);
