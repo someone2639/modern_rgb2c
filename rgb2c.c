@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
         usage();
     }
 
-    fprintf(stderr, "Making texture %s\n", tex.name);
+    // fprintf(stderr, "Making texture %s\n", tex.name);
 
     if (output != MIPMAP)
         flags &= ~SKIP_RAW_FLAG;
