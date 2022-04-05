@@ -231,13 +231,20 @@ void export_bgheader(Texture *tex) {
 
 	write_byte(tex, 0xFF);
 
+	int _wd, _ht;
+	if (tex->realwidth != 0) _wd = tex->realwidth;
+	else                     _wd = tex->width;
+
+	if (tex->realheight != 0) _ht = tex->realheight;
+	else                      _ht = tex->height;
+
 	u8 wd[2] = {0, 0};
-	wd[0] = tex->realwidth >> 16;
-	wd[1] = tex->realwidth & 0xFF;
+	wd[0] = _wd >> 16;
+	wd[1] = _wd & 0xFF;
 
 	u8 ht[2] = {0, 0};
-	ht[0] = tex->realheight >> 16;
-	ht[1] = tex->realheight & 0xFF;
+	ht[0] = _ht >> 16;
+	ht[1] = _ht & 0xFF;
 
 	write_hword(tex, wd);
 	write_hword(tex, ht);

@@ -247,8 +247,8 @@ int main(int argc, char *argv[]) {
         printf(" *\n");
     }
 
-    if (realheight > 0) tex.realheight = realheight;
-    if (realwidth > 0) tex.realwidth = realwidth;
+    tex.realheight = realheight;
+    tex.realwidth = realwidth;
 
     tex_convert(argv[optind], &tex, fmt, siz, 0, lr, lg, lb, hr, hg, hb, output, flags, shuf_mask, palettename);
 
