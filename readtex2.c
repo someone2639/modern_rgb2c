@@ -231,7 +231,7 @@ void export_bgheader(Texture *tex) {
 
 	write_byte(tex, 0xFF);
 
-	int _wd, _ht;
+	uint16_t _wd = 0, _ht = 0;
 	if (tex->realwidth != 0) _wd = tex->realwidth;
 	else                     _wd = tex->width;
 

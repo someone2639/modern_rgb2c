@@ -54,7 +54,6 @@ void usage(void) {
                     "          -t citype  Color Index type (C, I)\n"
                     "          -f fmt     Format of texel (RGBA, YUV, CI, IA, I, A)\n"
                     "          -G fmtsiz  n64graphics compatible format string\n"
-                    "			(defaults to best type for image).\n"
                     "          -o output  Format of output text (`C' for .c output, `RAW'\n"
                     "                        for raw ascii format, 'MIP' for MipMapping "
                     "(.c),\n"
