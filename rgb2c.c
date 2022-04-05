@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
             case RGBA16: case RGBA32: fmt = RGBA; break;
             case IA16: case IA8: case IA4: fmt = IA; break;
             case I8: case I4: fmt = I; break;
-            case CI8: case CI4: fmt = I; break;
+            case CI8: case CI4: fmt = CI; break;
             default:
                 fprintf(stderr, "bad fmtsiz passed with -G!");
                 exit(1);
