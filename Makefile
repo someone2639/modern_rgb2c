@@ -16,6 +16,8 @@ build/ci_texconv.o: ci_texconv.c | build/
 	$(CC) $(CFLAGS) -c -o $@ $<
 build/lodepng.o: lodepng.c | build/
 	$(CC) $(CFLAGS) -c -o $@ $<
+build/loadblock_widthpad.o: loadblock_widthpad.c | build/
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-build/rgb2c: build/rgb2c.o build/readtex2.o build/ci_texconv.o build/lodepng.o
+build/rgb2c: build/rgb2c.o build/readtex2.o build/loadblock_widthpad.o build/ci_texconv.o build/lodepng.o
 	$(CC) $^ -o $@

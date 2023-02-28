@@ -16,6 +16,8 @@
 					 (((g)<<3) & 0x7c0) |		\
 					 (((b)>>2) & 0x3e) | ((a) & 0x1))
 
+#define ACOUNT(s) ((sizeof((s))) / sizeof((s)[0]))
+
 // intermediate formats
 typedef struct _rgba
 {

@@ -5,6 +5,8 @@
 
 #include "readtex.h"
 #include "lodepng.h"
+#include "loadblock_widthpad.h"
+
 
 void export_ci(Texture *tex, char *filename) {
     LodePNGState state;
@@ -29,6 +31,14 @@ void export_ci(Texture *tex, char *filename) {
         export_bgheader(tex);
     }
 
+    // for (int i = 0; i < tex->height * tex->siz / 8; i++) {
+    //     for (int j = 0; j < tex->width * tex->siz / 8; j++) {
+    //         write_byte(tex, image[i]);
+    //     }
+    //     for (int k = 0; k < gWidthDiff_LoadBlock(tex->width); k++) {
+    //         write_byte(tex, 0);
+    //     }
+    // }
     for (int i = 0; i < tex->width * tex->height * tex->siz / 8; i++) {
         write_byte(tex, image[i]);
     }
