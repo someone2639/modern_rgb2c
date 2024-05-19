@@ -43,7 +43,7 @@ void write_word(Texture *t, u32 w) {
 	wa[0] = __builtin_bswap32(w);
 	switch (t->output) {
 		case C:
-			printf("0x%02X, 0x%02X, 0x%02X, 0x%02X, ",
+			printf("0x%02lX, 0x%02lX, 0x%02lX, 0x%02lX, ",
 				(w >> 24) & 0xFF,
 				(w >> 16) & 0xFF,
 				(w >> 8 ) & 0xFF,
@@ -51,7 +51,7 @@ void write_word(Texture *t, u32 w) {
 			);
 			break;
 		case ASCII:
-			printf("%.2x %.2x %.2x %.2x ",
+			printf("%.2lx %.2lx %.2lx %.2lx ",
 				(w >> 24) & 0xFF,
 				(w >> 16) & 0xFF,
 				(w >> 8 ) & 0xFF,
@@ -169,7 +169,7 @@ void export_ia(rgba *img, struct texture *t) {
 			ia16ia16[2] = alpha_0;
 			ia16ia16[3] = alpha_1;
 
-			write_word(t, ia16ia16);
+			write_word(t, *((u32*)ia16ia16));
 		}
 	}
 
@@ -280,7 +280,7 @@ void api_tex_convert(char *filename, char *palette_name, Texture *tex) {
 		return;
 	}
 
-	rgba *img = read_image(filename, &tex->width, &tex->height);
+	rgba *img = (rgba *) read_image(filename, &tex->width, &tex->height);
 
 	if (tex->flags & MAKE_BG_FLAG) {
 		export_bgheader(tex);
@@ -300,7 +300,7 @@ void api_tex_convert(char *filename, char *palette_name, Texture *tex) {
 	free(img);
 }
 
-int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int makestatic,
+void tex_convert (char *filename, struct texture *tex, int fmt, int siz, int makestatic,
 	int lr, int lg, int lb, int hr, int hg, int hb, int output, int flags,
 	int shuffle_mask,
 	// new fields
@@ -321,7 +321,7 @@ int tex_convert (char *filename, struct texture *tex, int fmt, int siz, int make
 		return;
 	}
 
-	rgba *img = read_image(filename, &width, &height);
+	rgba *img = (rgba *) read_image(filename, &width, &height);
 
 	tex->width = width;
 	tex->height = height;

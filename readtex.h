@@ -137,7 +137,7 @@ struct HashEntry {
 extern "C" {
 #endif
 
-int tex_convert (char *fn, struct texture *tex, int fmt, int siz, int makestatic,
+void tex_convert (char *fn, struct texture *tex, int fmt, int siz, int makestatic,
 	int lr, int lg, int lb, int hr, int hg, int hb, int output, int flags,
 	int shuffle_mask,
 	char *palname

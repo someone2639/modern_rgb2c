@@ -1,6 +1,6 @@
 default: build/rgb2c
 
-CFLAGS := -I. -g -Wall -Wextra -pedantic -frounding-math -fsignaling-nans -fsingle-precision-constant
+CFLAGS := -I. -g -Wno-unused-parameter -Wall -Wextra -pedantic -frounding-math -fsignaling-nans -fsingle-precision-constant
 
 clean:
 	rm -rf build/
